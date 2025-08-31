@@ -49,6 +49,7 @@
 
 (def build-subdirs
   ["DEBIAN"
+   "etc/apparmor.d"
    "opt/zen"
    "usr/bin"
    "usr/share/applications"
@@ -100,6 +101,37 @@ Name=Open the Profile Manager
 Exec=/opt/zen/zen --ProfileManager %u
 ")
 
+(def apparmor-file
+  "# This profile allows everything and only exists to give the
+# application a name instead of having the label \"unconfined\"
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile zen-browser /opt/zen/{zen,zen-bin,updater} flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/zen-browser>
+}
+")
+
+(def debian-postinst-file
+  "#!/bin/sh
+set -e
+if command -v apparmor_parser >/dev/null 2>&1; then
+  apparmor_parser -r -W -T /etc/apparmor.d/zen-browser || true
+fi
+exit 0")
+
+(def debian-postrm-file
+  "#!/bin/sh
+set -e
+if [ \"$1\" = \"purge\" ] && command -v apparmor_parser >/dev/null 2>&1; then
+  apparmor_parser -R /etc/apparmor.d/zen-browser || true
+fi
+exit 0")
+
 (defn unzip-tarball [src dest]
   (p/shell "tar" "-C" dest "-x" "--xz" "-f" src))
 
@@ -123,10 +155,19 @@ Exec=/opt/zen/zen --ProfileManager %u
   (spit (io/file build-dir "usr/share/applications/zen-browser.desktop")
         desktop-file))
 
-(defn create-control-file []
+(defn create-apparmor-file []
+  (spit (io/file build-dir "etc/apparmor.d/zen-browser")
+        apparmor-file))
+
+(defn create-debian-files []
   (let [version (slurp ".version")]
-    (spit (io/file build-dir "DEBIAN/control")
-          (debian-control-file version))))
+    (spit (io/file build-dir "DEBIAN/control") (debian-control-file version))
+    (spit (io/file build-dir "DEBIAN/postinst") debian-postinst-file)
+    (spit (io/file build-dir "DEBIAN/postrm") debian-postrm-file)
+    (fs/set-posix-file-permissions (fs/path build-dir "DEBIAN/postinst")
+                                   "rwxr-xr-x")
+    (fs/set-posix-file-permissions (fs/path build-dir "DEBIAN/postrm")
+                                   "rwxr-xr-x")))
 
 (defn build-deb-file []
   (let [version (slurp ".version")
@@ -140,6 +181,7 @@ Exec=/opt/zen/zen --ProfileManager %u
 ;(copy-browser-icons)
 ;(create-binary-link)
 ;(create-desktop-file)
-;(create-control-file)
 
+(create-debian-files)
+(create-apparmor-file)
 (build-deb-file)
