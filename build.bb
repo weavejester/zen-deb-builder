@@ -127,3 +127,19 @@ Exec=/opt/zen/zen --ProfileManager %u
   (let [version (slurp ".version")]
     (spit (io/file build-dir "DEBIAN/control")
           (debian-control-file version))))
+
+(defn build-deb-file []
+  (let [version (slurp ".version")
+        arch    (deb-archicture)]
+    (p/shell "dpkg-deb" "--build" "--root-owner-group" build-dir
+             (format "zen-browser_%s_%s.deb" version arch))))
+
+;(create-build-dirs)
+;(unzip-tarball tarball-filename "target/opt")
+
+;(copy-browser-icons)
+;(create-binary-link)
+;(create-desktop-file)
+;(create-control-file)
+
+(build-deb-file)
