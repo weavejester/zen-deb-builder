@@ -89,7 +89,7 @@ Actions=new-window;new-private-window;profilemanager;
 
 [Desktop Action new-window]
 Name=Open a New Window
-Exec=/opt/zen/zen %u
+Exec=/opt/zen/zen --new-window %u
 
 [Desktop Action new-private-window]
 Name=Open a New Private Window
@@ -99,3 +99,31 @@ Exec=/opt/zen/zen --private-window %u
 Name=Open the Profile Manager
 Exec=/opt/zen/zen --ProfileManager %u
 ")
+
+(defn unzip-tarball [src dest]
+  (p/shell "tar" "-C" dest "-x" "--xz" "-f" src))
+
+(def zen-icons-path
+  (fs/path build-dir "opt/zen/browser/chrome/icons/default"))
+
+(def usr-icons-path
+  (fs/path build-dir "usr/share/icons/hicolor"))
+
+(defn copy-browser-icons []
+  (doseq [res [16 32 64 128]]
+    (fs/copy
+     (fs/path zen-icons-path (str "default" res ".png"))
+     (fs/path usr-icons-path (str res "x" res) "apps/zen-browser.png"))))
+
+(defn create-binary-link []
+  (fs/create-sym-link (fs/path build-dir "usr/bin/zen")
+                      "../../opt/zen/zen"))
+
+(defn create-desktop-file []
+  (spit (io/file build-dir "usr/share/applications/zen-browser.desktop")
+        desktop-file))
+
+(defn create-control-file []
+  (let [version (slurp ".version")]
+    (spit (io/file build-dir "DEBIAN/control")
+          (debian-control-file version))))
