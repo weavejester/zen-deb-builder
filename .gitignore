@@ -1,3 +1,4 @@
 /.clj-kondo
 /.version
 /zen.linux-x86_64.tar.xz
+/target
