@@ -42,6 +42,11 @@
   (io/copy (:body (http/get url {:as :stream}))
            (io/file tarball-filename)))
 
+(defn download-latest-tarball []
+  (let [asset (get-latest-zen-asset)]
+    (store-version asset)
+    (download-asset asset)))
+
 (defn deb-archicture []
   (str/trim (:out (p/shell {:out :string} "dpkg" "--print-architecture"))))
 
@@ -177,6 +182,7 @@ exit 0")
 
 (defn delete-build-files []
   (fs/delete-tree build-dir)
+  (fs/delete-if-exists version-filename)
   (fs/delete-if-exists tarball-filename)
   (run! fs/delete-if-exists (fs/glob "." "zen-browser_*.deb")))
 
