@@ -6,4 +6,8 @@
    :task (b/delete-build-files)}
   download
   {:doc  "Download the latest tarball"
-   :task (b/download-latest-tarball)}}}
+   :task (b/download-latest-tarball)}
+  build
+  {:doc  "Build the deb file"
+   :task (do (b/create-build-files)
+             (b/build-deb-file))}}}

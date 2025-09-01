@@ -174,6 +174,15 @@ exit 0")
     (fs/set-posix-file-permissions (fs/path build-dir "DEBIAN/postrm")
                                    "rwxr-xr-x")))
 
+(defn create-build-files []
+  (create-build-dirs)
+  (unzip-tarball tarball-filename "target/opt")
+  (copy-browser-icons)
+  (create-binary-link)
+  (create-desktop-file)
+  (create-debian-files)
+  (create-apparmor-file))
+
 (defn build-deb-file []
   (let [version (slurp ".version")
         arch    (deb-archicture)]
@@ -185,14 +194,3 @@ exit 0")
   (fs/delete-if-exists version-filename)
   (fs/delete-if-exists tarball-filename)
   (run! fs/delete-if-exists (fs/glob "." "zen-browser_*.deb")))
-
-;(create-build-dirs)
-;(unzip-tarball tarball-filename "target/opt")
-
-;(copy-browser-icons)
-;(create-binary-link)
-;(create-desktop-file)
-
-;(create-debian-files)
-;(create-apparmor-file)
-;(build-deb-file)
