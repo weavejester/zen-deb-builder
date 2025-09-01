@@ -1,0 +1,6 @@
+{:paths ["."]
+ :tasks
+ {:requires ([build :as b])
+  clean
+  {:doc  "Remove all build files"
+   :task (b/delete-build-files)}}}

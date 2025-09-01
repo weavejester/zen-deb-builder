@@ -175,6 +175,11 @@ exit 0")
     (p/shell "dpkg-deb" "--build" "--root-owner-group" build-dir
              (format "zen-browser_%s_%s.deb" version arch))))
 
+(defn delete-build-files []
+  (fs/delete-tree build-dir)
+  (fs/delete-if-exists tarball-filename)
+  (run! fs/delete-if-exists (fs/glob "." "zen-browser_*.deb")))
+
 ;(create-build-dirs)
 ;(unzip-tarball tarball-filename "target/opt")
 
@@ -182,6 +187,6 @@ exit 0")
 ;(create-binary-link)
 ;(create-desktop-file)
 
-(create-debian-files)
-(create-apparmor-file)
-(build-deb-file)
+;(create-debian-files)
+;(create-apparmor-file)
+;(build-deb-file)
